@@ -2,9 +2,10 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 import torch.utils.data as data
+from torchvision import transforms
 
 class EmotionDataset(Dataset):
-    def __init__(self, root_dir, mode='train'):
+    def __init__(self, root_dir, mode='train', transform=None):
         """Create the dataset object
 
         Args:
@@ -24,6 +25,7 @@ class EmotionDataset(Dataset):
                            'neutral': 4, 'sad': 5, 'surprised': 6} # Defines the category in order to keep track of the label
         self.images = [] # store the images path
         self.labels = [] # store the label
+        self.transform = transform
 
         # Determine train or test directory
         data_dir = os.path.join(self.root_dir, mode)
@@ -57,11 +59,14 @@ class EmotionDataset(Dataset):
         # if not in gray mode, convert it
         if image.mode != 'L':
             image = image.convert('L')
+            
+        if self.transform is not None:
+            image = self.transform(image)
 
         return image, label
     
 
-def getDataLoader(data_path, batch_size, num_workers = 0, mode = 'train'):
+def getDataLoader(data_path, batch_size, num_workers = 0, mode = 'train', transform=None):
     """Return the dataloader used for the specified mode
 
     Args:
@@ -77,5 +82,5 @@ def getDataLoader(data_path, batch_size, num_workers = 0, mode = 'train'):
         shuffle = True
     else:
         shuffle = False
-    return data.DataLoader(EmotionDataset(data_path, mode= mode), batch_size=batch_size, shuffle=shuffle, num_workers = num_workers)
+    return data.DataLoader(EmotionDataset(data_path, mode= mode, transform=transform), batch_size=batch_size, shuffle=shuffle, num_workers = num_workers)
 
